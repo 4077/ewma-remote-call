@@ -1,0 +1,16 @@
+{
+    "name": "fed/ewma-remote-call",
+    "type": "ewma-module",
+    "description": "ewma remote call",
+    "authors": [
+        {
+            "name": "fed",
+            "email": "ewmafw@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "fed/ewma-module-installer-plugin": "~0.0.1",
+        "guzzlehttp/guzzle": "^6.3"
+    }
+}
