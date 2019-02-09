@@ -7,18 +7,18 @@ class Remote
     /**
      * @return \ewma\remoteCall\Remote
      */
-    public static function getInstance($serverName)
+    public static function getInstance($connectionString)
     {
-        if (!isset(static::$instances[$serverName])) {
-            $server = new self($serverName);
-
-            static::$instances[$serverName] = $server;
+        if (!isset(static::$instances[$connectionString])) {
+            static::$instances[$connectionString] = new self($connectionString);
         }
 
-        return static::$instances[$serverName];
+        return static::$instances[$connectionString];
     }
 
     private $controller;
+
+    private $env;
 
     private $ssl;
 
@@ -28,28 +28,46 @@ class Remote
 
     private $handlerUrl;
 
-    public function __construct($serverName)
+    private $configured;
+
+    public function __construct($connectionString)
     {
-        $serversData = dataSets()->get('ewma/remoteCall:servers');
+        // todo [app:]env
 
-        if ($serverData = ap($serversData, $serverName)) {
-            $scheme = ap($serverData, 'scheme') ?: 'http';
+        $this->env = \ewma\apps\models\Env::where('name', $connectionString)->first();
 
-            $this->ssl = $scheme == 'https';
+        if ($this->env) {
+            $connection = \ewma\remoteCall\models\Connection::where('env_id', $this->env->id)->first();
 
-            $this->host = $serverData['host'];
-            $handlerRoute = $serverData['route'];
+            if ($connection) {
+                $this->ssl = $connection->ssl;
+                $this->host = $connection->host;
+                $this->key = $connection->key;
 
-            $this->handlerUrl = $scheme . '://' . path($this->host, $handlerRoute) . '/';
-            $this->key = ap($serverData, 'key');
+                $scheme = $this->ssl ? 'https' : 'http';
+
+                $this->handlerUrl = $scheme . '://' . path($this->host, 'remote-call') . '/';
+
+                $this->configured = true;
+            }
         }
 
-        $this->controller = appc('\ewma\remoteCall~');
+        $this->controller = appc('\ewma\remoteCall -');
+    }
+
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    public function isConfigured()
+    {
+        return $this->configured;
     }
 
     public function isCurrent()
     {
-        return $this->host === app()->host;
+        return $this->env->name === app()->getEnv();
     }
 
     public function async($path, $data = [])

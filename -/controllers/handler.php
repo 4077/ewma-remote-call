@@ -7,20 +7,19 @@ class Handler extends \Controller
         $requestSvc = $this->app->request;
         $requestData = $requestSvc->request->get('data') ?: $requestSvc->query->get('data');
 
-        $serversData = dataSets()->get('ewma/remoteCall:servers');
-        $thisServer = ap($serversData, $this->_env());
+        $currentServer = remote($this->_env());
 
         $responseErrors = [];
 
         if (empty($requestData)) {
             $responseErrors[] = 'empty request data';
         } else {
-            if ($thisServer) {
-                $enabled = dataSets()->get('ewma/remoteCall::enabled');
+            if ($currentServer) {
+                $enabled = true; // hardcode
 
                 if ($enabled) {
-                    if (isset($thisServer['key'])) {
-                        $requestData = _j64($requestData, $thisServer['key']);
+                    if ($key = $currentServer->getKey()) {
+                        $requestData = _j64($requestData, $key);
 
                         if (!$requestData) {
                             $responseErrors[] = 'wrong key for env=' . $this->_env();
@@ -62,6 +61,6 @@ class Handler extends \Controller
             'content' => $responseContent
         ];
 
-        return j64_($responseData, $thisServer['key']);
+        return j64_($responseData, $currentServer->getKey());
     }
 }

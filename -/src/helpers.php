@@ -1,6 +1,10 @@
 <?php
 
-function remote($serverName)
+function remote($connectionString)
 {
-    return \ewma\remoteCall\Remote::getInstance($serverName);
+    $remote = \ewma\remoteCall\Remote::getInstance($connectionString);
+
+    if ($remote->isConfigured()) {
+        return $remote;
+    }
 }
