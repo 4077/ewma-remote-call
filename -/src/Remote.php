@@ -34,7 +34,7 @@ class Remote
     {
         // todo [app:]env
 
-        $this->env = \ewma\apps\models\Env::where('name', $connectionString)->first();
+        $this->env = \ewma\apps\models\Env::where('app_id', 0)->where('name', $connectionString)->first();
 
         if ($this->env) {
             $connection = \ewma\remoteCall\models\Connection::where('env_id', $this->env->id)->first();
